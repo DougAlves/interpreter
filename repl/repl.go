@@ -7,7 +7,6 @@ import (
 
 	"github.com/DougAlves/interpreter/lexer"
 	"github.com/DougAlves/interpreter/parser"
-	"github.com/DougAlves/interpreter/token"
 )
 
 const PROMPT = ">>"
@@ -22,10 +21,18 @@ func Start(in io.Reader, out io.Writer) {
 		}
 		line := scanner.Text()
 		l := lexer.New(line)
-		parser.New(l)
-		for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
-			fmt.Printf("%+v\n", tok)
+		p := parser.New(l)
+		program := p.ParseProgram()
+		if errors := p.Errors(); len(errors) > 0 {
+			printParserErros(out, errors)
 		}
+		io.WriteString(out, program.String())
+		io.WriteString(out, "\n")
 	}
 }
 
+func printParserErros(out io.Writer, errors []string) {
+	for _, msg := range errors {
+		io.WriteString(out, "\t"+msg+"\n")
+	}
+}
